@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="hexlet.code.AppApplicationTests" tests="1" skipped="1" failures="0" errors="0" timestamp="2022-04-11T05:52:20" hostname="velya-redmibookpro15s" time="0.0">
+  <properties/>
+  <testcase name="testInit()" classname="hexlet.code.AppApplicationTests" time="0.0">
+    <skipped/>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
