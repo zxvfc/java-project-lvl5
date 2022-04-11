@@ -1,38 +1,36 @@
 package hexlet.code.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-import static javax.persistence.GenerationType.AUTO;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.GenerationType;
+import javax.persistence.Temporal;
+import javax.validation.constraints.NotBlank;
+import javax.persistence.Column;
+import java.util.Date;
+
 import static javax.persistence.TemporalType.TIMESTAMP;
 
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
-@Table(name = "users")
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
     @Id
-    @GeneratedValue(strategy = AUTO)
-    private Long id;
-
-    @Column(unique = true)
-    private String email;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
 
     @NotBlank
     private String firstName;
@@ -40,17 +38,15 @@ public class User {
     @NotBlank
     private String lastName;
 
+    @Column(unique = true)
+    private String email;
+
     @NotBlank
-    @Size(min = 3, max = 100)
     @JsonIgnore
     private String password;
 
     @CreationTimestamp
     @Temporal(TIMESTAMP)
     private Date createdAt;
-
-    public User(final Long id) {
-        this.id = id;
-    }
 
 }

@@ -15,6 +15,6 @@ make install
 ## Run
 
 ```sh
-make start
+$ make start
 # open http://localhost:3000
 ```

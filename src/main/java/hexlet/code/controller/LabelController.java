@@ -3,77 +3,117 @@ package hexlet.code.controller;
 import hexlet.code.dto.LabelDto;
 import hexlet.code.model.Label;
 import hexlet.code.repository.LabelRepository;
+import hexlet.code.service.LabelServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import java.util.List;
-import javax.validation.Valid;
-
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import javax.validation.Valid;
+import java.util.List;
+import java.util.NoSuchElementException;
 
-import static hexlet.code.controller.LabelController.LABEL_CONTROLLER_PATH;
+import static hexlet.code.controller.LabelController.LABEL_PATH;
+import static hexlet.code.controller.UserController.ID;
 import static org.springframework.http.HttpStatus.CREATED;
 
-@AllArgsConstructor
 @RestController
-@SecurityRequirement(name = "javainuseapi")
-@RequestMapping("${base-url}" + LABEL_CONTROLLER_PATH)
+@RequestMapping("${base-url}" + LABEL_PATH)
+@PreAuthorize("isAuthenticated()")
 public class LabelController {
 
-    public static final String LABEL_CONTROLLER_PATH = "/labels";
-    public static final String ID = "/{id}";
+    public static final String LABEL_PATH = "/labels";
 
-    private final LabelRepository labelRepository;
+    @Autowired
+    private LabelRepository labelRepository;
 
+    @Autowired
+    private LabelServiceImpl labelService;
+
+    @Operation(summary = "Get Label by id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Label found", content =
+            @Content(mediaType = "application/json", schema = @Schema(implementation = Label.class))),
+            @ApiResponse(responseCode = "401", description = "User is unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Label not found")
+    })
+    @GetMapping(ID)
+    public Label getLabel(
+            @Parameter(description = "Id of Label to be found")
+            @PathVariable Long id) {
+        return labelRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Label not found"));
+    }
+
+    @Operation(summary = "Get list of all Labels")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of all Labels", content =
+            @Content(mediaType = "application/json", schema = @Schema(implementation = Label.class))),
+            @ApiResponse(responseCode = "401", description = "User is unauthorized")
+    })
     @GetMapping
     public List<Label> getAllLabels() {
         return labelRepository.findAll();
     }
 
-    @Operation(summary = "Get label by Id")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Label found"),
-            @ApiResponse(responseCode = "404", description = "Label with that id not found")
-    })
-    @GetMapping(ID)
-    public Label getById(@PathVariable final Long id) {
-        return labelRepository.findById(id).get();
-    }
-
     @Operation(summary = "Create new Label")
-    @ApiResponse(responseCode = "201", description = "Label created")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Label created", content =
+            @Content(mediaType = "application/json", schema = @Schema(implementation = Label.class))),
+            @ApiResponse(responseCode = "401", description = "User is unauthorized"),
+            @ApiResponse(responseCode = "422", description = "Data validation failed")
+    })
     @PostMapping
     @ResponseStatus(CREATED)
-    public Label createNewLabel(@RequestBody @Valid final LabelDto dto) {
-        return labelRepository.save(Label.builder()
-                                            .name(dto.getName())
-                                            .build()
-        );
+    public Label createLabel(
+            @Parameter(description = "Data for creating new Label", required = true)
+            @RequestBody @Valid LabelDto labelDto) {
+        return labelService.createLabel(labelDto);
     }
 
     @Operation(summary = "Update Label")
-    @ApiResponse(responseCode = "200", description = "Label updated")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Label updated", content =
+            @Content(mediaType = "application/json", schema = @Schema(implementation = Label.class))),
+            @ApiResponse(responseCode = "401", description = "User is unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Label not found"),
+            @ApiResponse(responseCode = "422", description = "Data validation failed")
+    })
     @PutMapping(ID)
-    public Label updateLabel(@PathVariable final Long id, @RequestBody @Valid final LabelDto dto) {
-        final Label oldLabel = labelRepository.findById(id).get();
-        oldLabel.setName(dto.getName());
-        return labelRepository.save(oldLabel);
+    public Label updateLabel(
+            @Parameter(description = "Id of Label to be updated", required = true)
+            @PathVariable Long id,
+            @Parameter(description = "Data for updating Label", required = true)
+            @RequestBody @Valid LabelDto labelDto
+    ) {
+        return labelService.updateLabel(id, labelDto);
     }
 
+    @Operation(summary = "Delete Label")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Label deleted", content =
+            @Content(mediaType = "application/json", schema = @Schema(implementation = Label.class))),
+            @ApiResponse(responseCode = "401", description = "User is unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Label not found"),
+            @ApiResponse(responseCode = "422", description = "Can't delete label with existing task(s)"),
+    })
     @DeleteMapping(ID)
-    public void delete(@PathVariable final long id) {
-        labelRepository.deleteById(id);
+    public void deleteLabel(
+            @Parameter(description = "Id of Label to be deleted")
+            @PathVariable Long id) {
+        labelService.deleteLabel(id);
     }
-
 }

@@ -1,0 +1,37 @@
+users:
+  - id: 1
+    first_name: Petr
+    last_name: Petrov
+    email: petr@petr.com
+    password: qwerty
+    created_at: 2022-04-07T11:15:17.173Z
+  - id: 2
+    first_name: Ivan
+    last_name: Ivanov
+    email: Ivan@Ivan.com
+    password: asdfgh
+    created_at: 2022-04-07T11:13:12.173Z
+
+task_statuses:
+  - id: 1
+    name: statusOne
+    created_at: 2022-04-07T11:15:17.173Z
+  - id: 2
+    name: statusTwo
+    created_at: 2022-04-07T13:13:14.173Z
+
+tasks:
+  - id: 1
+    name: taskOne
+    description: descOne
+    task_status_id: 1
+    author_id: 1
+    executor_id: 2
+    created_at: 2022-04-07T11:15:17.173Z
+  - id: 2
+    name: taskTwo
+    description: descTwo
+    task_status_id: 1
+    author_id: 2
+    executor_id: 1
+    created_at: 2022-04-07T13:15:17.173Z

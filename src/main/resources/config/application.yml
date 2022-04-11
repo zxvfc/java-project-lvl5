@@ -5,13 +5,17 @@ base-url: /api
 
 spring:
   application:
-    name: taskManager
-
-  liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/changelog-master.xml
+    name: hexletProject
 
   mvc:
     hiddenmethod:
       filter:
-        enabled: true
+        enabled:
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+springdoc:
+  api-docs:
+    path: /swagger.html

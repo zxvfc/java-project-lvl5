@@ -1,16 +1,18 @@
 package hexlet.code.dto;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class LabelDto {
+
+    @NotNull
     @NotBlank
-    @Size(min = 3, max = 1_000)
     private String name;
 }

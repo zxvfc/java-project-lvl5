@@ -1,71 +1,70 @@
 package hexlet.code.service;
 
 import hexlet.code.dto.TaskDto;
-import hexlet.code.model.Label;
-import hexlet.code.model.TaskStatus;
 import hexlet.code.model.Task;
+import hexlet.code.model.TaskStatus;
 import hexlet.code.model.User;
+import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
+import hexlet.code.repository.TaskStatusRepository;
+import hexlet.code.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
+
 @Service
-@AllArgsConstructor
 public class TaskServiceImpl implements TaskService {
 
-    private final TaskRepository taskRepository;
-    private final UserService userService;
+    @Autowired
+    private TaskRepository taskRepository;
+
+    @Autowired
+    private UserServiceImpl userService;
+
+    @Autowired
+    private TaskStatusRepository taskStatusRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private LabelRepository labelRepository;
 
     @Override
-    public Task createNewTask(final TaskDto dto) {
-        final Task newTask = fromDto(dto);
-        return taskRepository.save(newTask);
-    }
+    public Task createTask(TaskDto taskDto) {
+        final Task task = new Task();
 
-    @Override
-    public Task updateTask(final long id, final TaskDto dto) {
-        final Task task = taskRepository.findById(id).get();
-        merge(task, dto);
+        final User author = userService.getCurrentUser();
+        final TaskStatus taskStatus = taskStatusRepository.findById(taskDto.getTaskStatusId()).get();
+
+        task.setName(taskDto.getName());
+        task.setDescription(taskDto.getDescription());
+        task.setAuthor(author);
+        task.setTaskStatus(taskStatus);
+        task.setLabels(labelRepository.findAllById(taskDto.getLabelIds()));
+        final Long executorId = taskDto.getExecutorId();
+        if (executorId != null) {
+            task.setExecutor(userRepository.findById(executorId).get());
+        }
         return taskRepository.save(task);
     }
 
-    private void merge(final Task task, final TaskDto taskDto) {
-        final Task newTask = fromDto(taskDto);
-        task.setName(newTask.getName());
-        task.setDescription(newTask.getDescription());
-        task.setExecutor(newTask.getExecutor());
-        task.setTaskStatus(newTask.getTaskStatus());
-        task.setLabels(newTask.getLabels());
-    }
+    @Override
+    public Task updateTask(Long id, TaskDto taskDto) {
+        final Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Task not found"));
 
-    private Task fromDto(final TaskDto dto) {
-        final User author = userService.getCurrentUser();
-        final User executor = Optional.ofNullable(dto.getExecutorId())
-                .map(User::new)
-                .orElse(null);
+        final TaskStatus taskStatus = taskStatusRepository.findById(taskDto.getTaskStatusId()).get();
 
-        final TaskStatus taskStatus = Optional.ofNullable(dto.getTaskStatusId())
-                .map(TaskStatus::new)
-                .orElse(null);
-
-        final Set<Label> labels = Optional.ofNullable(dto.getLabelIds())
-                .orElse(Set.of())
-                .stream()
-                .filter(Objects::nonNull)
-                .map(Label::new)
-                .collect(Collectors.toSet());
-
-        return Task.builder()
-                .author(author)
-                .executor(executor)
-                .taskStatus(taskStatus)
-                .labels(labels)
-                .name(dto.getName())
-                .description(dto.getDescription())
-                .build();
+        task.setName(taskDto.getName());
+        task.setDescription(taskDto.getDescription());
+        task.setTaskStatus(taskStatus);
+        task.setLabels(labelRepository.findAllById(taskDto.getLabelIds()));
+        final Long executorId = taskDto.getExecutorId();
+        if (executorId != null) {
+            task.setExecutor(userRepository.findById(executorId).get());
+        }
+        return taskRepository.save(task);
     }
 }

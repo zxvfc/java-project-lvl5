@@ -32,7 +32,7 @@ public class QTask extends EntityPathBase<Task> {
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
-    public final SetPath<Label, QLabel> labels = this.<Label, QLabel>createSet("labels", Label.class, QLabel.class, PathInits.DIRECT2);
+    public final ListPath<Label, QLabel> labels = this.<Label, QLabel>createList("labels", Label.class, QLabel.class, PathInits.DIRECT2);
 
     public final StringPath name = createString("name");
 

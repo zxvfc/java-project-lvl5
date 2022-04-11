@@ -1,4 +1,4 @@
-package hexlet.code.component;
+package hexlet.code.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Clock;
@@ -59,5 +59,4 @@ public class JWTHelper {
         }
         return claims;
     }
-
 }
