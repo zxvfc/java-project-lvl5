@@ -1,9 +1,8 @@
 package hexlet.code.filter;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hexlet.code.component.JWTHelper;
 import hexlet.code.dto.LoginDto;
-import hexlet.code.utils.JWTHelper;
 import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,9 +18,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private final JWTHelper jwtHelper;
 
@@ -37,7 +38,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     public Authentication attemptAuthentication(final HttpServletRequest request,
                                                 final HttpServletResponse response) throws AuthenticationException {
         final LoginDto loginData = getLoginData(request);
-        final UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(
+        final var authRequest = new UsernamePasswordAuthenticationToken(
                 loginData.getEmail(),
                 loginData.getPassword()
         );
@@ -50,9 +51,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             final String json = request.getReader()
                     .lines()
                     .collect(Collectors.joining());
-            Map<String, String> mapRequest = MAPPER.readValue(json, new TypeReference<>() {
-            });
-            return new LoginDto(mapRequest.get("email"), mapRequest.get("password"));
+            return MAPPER.readValue(json, LoginDto.class);
         } catch (IOException e) {
             throw new BadCredentialsException("Can't extract login data from request");
         }
@@ -64,7 +63,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             final FilterChain chain,
                                             final Authentication authResult) throws IOException {
         final UserDetails user = (UserDetails) authResult.getPrincipal();
-        final String token = jwtHelper.expiring(Map.of("email", user.getUsername()));
+        final String token = jwtHelper.expiring(Map.of(SPRING_SECURITY_FORM_USERNAME_KEY, user.getUsername()));
 
         response.getWriter().print(token);
     }

@@ -1,11 +1,9 @@
 package hexlet.code.config.security;
 
+import hexlet.code.component.JWTHelper;
 import hexlet.code.filter.JWTAuthenticationFilter;
 import hexlet.code.filter.JWTAuthorizationFilter;
-import hexlet.code.utils.JWTHelper;
-
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -23,8 +21,6 @@ import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
-import static hexlet.code.controller.TaskController.TASK_PATH;
-import static hexlet.code.controller.TaskStatusController.TASK_STATUS_PATH;
 import static hexlet.code.controller.UserController.USER_CONTROLLER_PATH;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
@@ -36,8 +32,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     public static final String LOGIN = "/login";
 
-    public static final List<GrantedAuthority> DEFAULT_AUTHORITIES = List.of(new SimpleGrantedAuthority("USER"));
+    public static final List<GrantedAuthority>  DEFAULT_AUTHORITIES = List.of(new SimpleGrantedAuthority("USER"));
 
+    //Note: Сейчас разрешены:
+    // - GET('/api/users')
+    // - POST('/api/users')
+    // - POST('/api/login')
+    // - все запросы НЕ начинающиеся на '/api'
     private final RequestMatcher publicUrls;
     private final RequestMatcher loginRequest;
     private final UserDetailsService userDetailsService;
@@ -52,10 +53,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 loginRequest,
                 new AntPathRequestMatcher(baseUrl + USER_CONTROLLER_PATH, POST.toString()),
                 new AntPathRequestMatcher(baseUrl + USER_CONTROLLER_PATH, GET.toString()),
-                new AntPathRequestMatcher(baseUrl + TASK_STATUS_PATH, GET.toString()),
-                new AntPathRequestMatcher(baseUrl + TASK_STATUS_PATH + "/**", GET.toString()),
-                new AntPathRequestMatcher(baseUrl + TASK_PATH, GET.toString()),
-                new AntPathRequestMatcher(baseUrl + TASK_PATH + "/**", GET.toString()),
                 new NegatedRequestMatcher(new AntPathRequestMatcher(baseUrl + "/**"))
         );
         this.userDetailsService = userDetailsService;
@@ -72,20 +69,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(final HttpSecurity http) throws Exception {
 
-        final JWTAuthenticationFilter authenticationFilter = new JWTAuthenticationFilter(
+        final var authenticationFilter = new JWTAuthenticationFilter(
                 authenticationManagerBean(),
                 loginRequest,
                 jwtHelper
         );
 
-        final JWTAuthorizationFilter authorizationFilter = new JWTAuthorizationFilter(
+        final var authorizationFilter = new JWTAuthorizationFilter(
                 publicUrls,
                 jwtHelper
         );
 
         http.csrf().disable()
-                .headers().frameOptions().disable()
-                .and()
                 .authorizeRequests()
                 .requestMatchers(publicUrls).permitAll()
                 .anyRequest().authenticated()
@@ -97,4 +92,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .httpBasic().disable()
                 .logout().disable();
     }
+
 }
+
